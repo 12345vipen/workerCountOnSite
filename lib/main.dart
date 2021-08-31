@@ -1,38 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+
+import 'package:csv/csv.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      debugShowCheckedModeBanner: false,
+      title: 'Workers On Site',
+      home: HomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
-
+class HomePage extends StatefulWidget {
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _HomePageState extends State<HomePage> {
+  List<List<dynamic>> _data = [];
 
-  void _incrementCounter() {
+  // This function is triggered when the floating button is pressed
+  void _loadCSV() async {
+    final _rawData = await rootBundle.loadString("assets/worker.csv");
+    List<List<dynamic>> _listData = CsvToListConverter().convert(_rawData);
     setState(() {
-      _counter++;
+      _data = _listData;
     });
   }
 
@@ -40,27 +39,33 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text("Kindacode.com"),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+      body: _data.length == 0
+          ? Column(
+              children: [
+                Spacer(),
+                Center(child: Text('Click on the file button to load latest workers data',style: TextStyle(color: Colors.green,fontSize: 25,fontWeight: FontWeight.bold),)),
+                IconButton(onPressed: (){}, icon: Icon(Icons.file_copy_outlined,size: 40,)),
+                Spacer(),
+              ],
+            )
+          : ListView.builder(
+              itemCount: _data.length,
+              itemBuilder: (_, index) {
+                return Card(
+                  margin: const EdgeInsets.all(3),
+                  color: index == 0 ? Colors.amber : Colors.white,
+                  child: ListTile(
+                    leading: Text(_data[index][0].toString()),
+                    title: Text(_data[index][1]),
+                    trailing: Text(_data[index][2].toString()),
+                  ),
+                );
+              },
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
-      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ),
+          child: Icon(Icons.contact_page_outlined), onPressed: _loadCSV),
     );
   }
 }
